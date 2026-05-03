@@ -1,0 +1,109 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* SELL NOW বাটনের ডায়নামিক ও গ্লেজি লুক */
+.sell-now-btn {
+  padding: 6px 16px; /* বাটন ছোট করার জন্য */
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 50px;
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(135deg, #ffdc18 0%, #ffb400 100%);
+  color: #000;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  box-shadow: 0 4px 15px rgba(255, 180, 0, 0.3);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.sell-now-btn:hover {
+  transform: scale(1.05); /* মাউস নিলে সামান্য বড় হবে */
+  box-shadow: 0 6px 20px rgba(255, 180, 0, 0.5);
+}
+
+/* গ্লেজি শাইন ইফেক্ট */
+.sell-now-btn::after {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -60%;
+  width: 20%;
+  height: 200%;
+  background: rgba(255, 255, 255, 0.5);
+  transform: rotate(30deg);
+  transition: all 0.6s ease;
+}
+
+.sell-now-btn:hover::after {
+  left: 120%;
+}
+
+/* WhatsApp বাটন - গ্লেজি গ্রিন লুক */
+.contact-us-btn {
+  padding: 6px 16px; 
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 50px;
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  text-decoration: none;
+}
+
+.contact-us-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(37, 211, 102, 0.5);
+}
+
+/* গ্লেজি শাইন ইফেক্ট */
+.contact-us-btn::after {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -60%;
+  width: 20%;
+  height: 200%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: rotate(30deg);
+  transition: all 0.6s ease;
+}
+
+.contact-us-btn:hover::after {
+  left: 120%;
+}
