@@ -11,18 +11,19 @@ export default function LoginPage() {
 
   // গুগল লগইন ফাংশন - এখন ড্যাশবোর্ডে জোর করে পাঠাবে না
   async function loginWithGoogle() {
-    setLoading(true);
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { 
-        redirectTo: `${window.location.origin}` 
-      }
-    });
-    if (error) {
-      alert("গুগল লগইনে সমস্যা: " + error.message);
-      setLoading(false);
+  setLoading(true);
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: { 
+      // এটি এখন বুদ্ধিমানের মতো রিডাইরেক্ট করবে
+      redirectTo: window.location.href 
     }
+  });
+  if (error) {
+    alert("গুগল লগইনে সমস্যা: " + error.message);
+    setLoading(false);
   }
+}
 
   // ওটিপি পাঠানো
   async function sendOTP() {
