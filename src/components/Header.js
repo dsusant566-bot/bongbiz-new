@@ -65,11 +65,11 @@ export default function Header() {
               </div>
             ) : (
               <button 
-                onClick={() => signIn('google', { callbackUrl: window.location.origin })} 
-                className="bg-[#7B00FF] hover:bg-white hover:text-[#7B00FF] text-white px-5 py-1.5 rounded-full font-black text-xs shadow-md transition-all border border-white/20 uppercase"
-              >
-                LOGIN
-              </button>
+  onClick={() => signIn('google', { callbackUrl: 'https://bongobiz.com' })} 
+  className="bg-[#7B00FF] hover:bg-white hover:text-[#7B00FF] text-white px-5 py-1.5 rounded-full font-black text-xs shadow-md transition-all border border-white/20 uppercase"
+>
+  LOGIN
+</button>
             )}
           </div>
         </div>
