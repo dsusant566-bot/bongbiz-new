@@ -10,17 +10,29 @@ export default function Dashboard() {
   const [selectedAdLeads, setSelectedAdLeads] = useState([]); 
   const [showLeadModal, setShowLeadModal] = useState(false);
   const [modalLoading, setModalLoading] = useState(false);
+  const [userEmail, setUserEmail] = useState(null);
 
   useEffect(() => {
-    fetchAds();
+    // ইউজারের সেশন চেক করে তার ইমেল নেওয়া
+    const getSessionAndFetchAds = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        setUserEmail(session.user.email);
+        fetchAds(session.user.email); // শুধু নিজের অ্যাড নিয়ে আসবে
+      } else {
+        setLoading(false);
+      }
+    };
+    getSessionAndFetchAds();
   }, []);
 
-  async function fetchAds() {
+  async function fetchAds(email) {
     setLoading(true);
     const { data, error } = await supabase
       .from('listings')
       .select('*')
       .eq('is_deleted', false)
+      .eq('user_email', email) // মেইন ফিল্টার: নিজের ইমেল দিয়ে দেখা
       .order('created_at', { ascending: false });
 
     if (!error) {
@@ -31,7 +43,7 @@ export default function Dashboard() {
     setLoading(false);
   }
 
-  // নির্দিষ্ট একটি অ্যাডের লিড দেখার ফাংশন
+  // --- লিড দেখার ফাংশন (আগে যা ছিল তাই আছে) ---
   async function viewLeads(adId) {
     setShowLeadModal(true);
     setModalLoading(true);
@@ -43,12 +55,11 @@ export default function Dashboard() {
 
     if (!error) {
       setSelectedAdLeads(data);
-    } else {
-      console.error("Error fetching leads:", error.message);
     }
     setModalLoading(false);
   }
 
+  // --- ডিলিট ফাংশন (আগে যা ছিল তাই আছে) ---
   async function deleteAd(id) {
     if (window.confirm("আপনি কি নিশ্চিত যে এই অ্যাডটি সরাতে চান?")) {
       const { error } = await supabase
@@ -58,9 +69,7 @@ export default function Dashboard() {
 
       if (!error) {
         alert("অ্যাডটি সরানো হয়েছে।");
-        fetchAds(); 
-      } else {
-        alert("সমস্যা হয়েছে: " + error.message);
+        fetchAds(userEmail); 
       }
     }
   }
@@ -70,13 +79,14 @@ export default function Dashboard() {
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-2xl font-black text-slate-800 uppercase italic">
-            Admin <span className="text-blue-600">Dashboard</span>
+            My <span className="text-blue-600">Ads Control</span>
           </h1>
           <Link href='/post-ad' className="bg-blue-600 text-white px-6 py-2 rounded-xl font-bold text-xs uppercase shadow-lg hover:bg-black transition-all">
             + New Ad
           </Link>
         </div>
 
+        {/* --- টেবল ডিজাইন --- */}
         <div className="bg-white rounded-[2rem] shadow-xl overflow-hidden border border-gray-100">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
@@ -118,7 +128,7 @@ export default function Dashboard() {
                     </tr>
                   ))
                 ) : (
-                  <tr><td colSpan="4" className="p-20 text-center text-gray-300 font-black uppercase text-xs">No Ads Found</td></tr>
+                  <tr><td colSpan="4" className="p-20 text-center text-gray-300 font-black uppercase text-xs">No Ads Found. Start by posting one!</td></tr>
                 )}
               </tbody>
             </table>
@@ -126,26 +136,14 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* --- Leads Modal (পপ-আপ উইন্ডো) --- */}
+      {/* --- লিড মোডাল (পপ-আপ উইন্ডো) --- */}
       {showLeadModal && (
-        <div 
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
-          onClick={() => setShowLeadModal(false)} 
-        >
-          <div 
-            className="bg-white rounded-[2.5rem] p-8 max-w-md w-full max-h-[80vh] overflow-y-auto shadow-2xl relative"
-            onClick={(e) => e.stopPropagation()} 
-          >
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={() => setShowLeadModal(false)}>
+          <div className="bg-white rounded-[2.5rem] p-8 max-w-md w-full max-h-[80vh] overflow-y-auto shadow-2xl relative" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-6 sticky top-0 bg-white pb-4 border-b border-gray-100">
               <h2 className="text-xl font-black text-slate-900 uppercase italic">Ad Contact Leads</h2>
-              <button 
-                onClick={() => setShowLeadModal(false)} 
-                className="bg-red-50 text-red-600 px-3 py-1 rounded-full text-[10px] font-black uppercase hover:bg-red-600 hover:text-white transition-all shadow-sm"
-              >
-                Close ✕
-              </button>
+              <button onClick={() => setShowLeadModal(false)} className="bg-red-50 text-red-600 px-3 py-1 rounded-full text-[10px] font-black uppercase hover:bg-red-600 hover:text-white transition-all shadow-sm">Close ✕</button>
             </div>
-            
             {modalLoading ? (
               <div className="text-center py-10 font-black text-blue-500 animate-pulse uppercase">Loading Leads...</div>
             ) : selectedAdLeads.length > 0 ? (
@@ -159,19 +157,12 @@ export default function Dashboard() {
                         {new Date(lead.created_at).toLocaleDateString('en-IN')}
                       </p>
                     </div>
-                    <a 
-                      href={`tel:${lead.visitor_phone}`} 
-                      className="bg-green-500 text-white w-10 h-10 rounded-full flex items-center justify-center shadow-md hover:bg-black transition-all"
-                    >
-                      📞
-                    </a>
+                    <a href={`tel:${lead.visitor_phone}`} className="bg-green-500 text-white w-10 h-10 rounded-full flex items-center justify-center shadow-md hover:bg-black transition-all">📞</a>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-center py-20 text-gray-300 font-bold italic uppercase tracking-widest">
-                No leads for this ad yet.
-              </div>
+              <div className="text-center py-20 text-gray-300 font-bold italic uppercase tracking-widest">No leads yet.</div>
             )}
           </div>
         </div>

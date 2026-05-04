@@ -20,7 +20,6 @@ export default function Header() {
   // সার্চ হ্যান্ডলার - যা আপনার সার্চ পেজকে সঠিক তথ্য পাঠাবে
   const handleSearch = (e) => {
     if (e.key === 'Enter' && search.trim() !== "") {
-      // এখানে .trim() ব্যবহার করা হয়েছে যাতে বাড়তি স্পেস না যায়
       router.push(`/search?q=${encodeURIComponent(search.trim())}`);
     }
   };
@@ -80,7 +79,8 @@ export default function Header() {
                     alt="user" 
                   />
                   <button 
-                    onClick={() => signOut()} 
+                    {/* লগআউট করলে হোমপেজে পাঠিয়ে দেবে */}
+                    onClick={() => signOut({ callbackUrl: '/' })} 
                     className="hidden sm:block text-[9px] font-black text-purple-200 hover:text-white uppercase tracking-tighter"
                   >
                     LOGOUT
@@ -89,7 +89,8 @@ export default function Header() {
               </div>
             ) : (
               <button 
-                onClick={() => signIn('google')} 
+                {/* লগইন করলে যে পেজে আছেন সেখানেই ফেরত আনবে */}
+                onClick={() => signIn('google', { callbackUrl: window.location.href })} 
                 className="bg-[#7B00FF] hover:bg-white hover:text-[#7B00FF] text-white px-5 py-1.5 rounded-full font-black text-xs shadow-md transition-all border border-white/20 uppercase"
               >
                 LOGIN
