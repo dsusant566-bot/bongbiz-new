@@ -17,8 +17,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "BongoBiz | Classified Marketplace",
-  description: "Buy and sell items in West Bengal",
+  title: "BongoBiz - Classified Marketplace",
+  description: "The Best Classified Marketplace for Property Developers and Beyond",
+  verification: {
+    google: "RoxK-u3FkbPbZcER9b-KnOF60fQQxWXiLd-_5Hc2yck",
+  },
 };
 
 export default function RootLayout({ children }) {
