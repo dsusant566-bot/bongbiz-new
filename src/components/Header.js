@@ -78,12 +78,13 @@ export default function Header() {
                     className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 border-purple-300" 
                     alt="user" 
                   />
-                  <button 
-                    onClick={() => signOut({ callbackUrl: '/' })} 
-                    className="text-[9px] font-black text-purple-200 hover:text-white uppercase tracking-tighter"
-                  >
-                    LOGOUT
-                  </button>
+                  // শুধু এই লাইনটি খুঁজে দেখুন এবং নিচের মতো করুন
+<button 
+  onClick={() => signIn('google', { callbackUrl: window.location.href })} 
+  className="bg-[#7B00FF] ..."
+>
+  LOGIN
+</button>
                 </div>
               </div>
             ) : (
