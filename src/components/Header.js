@@ -17,7 +17,6 @@ export default function Header() {
     { name: "Services", link: "/services" },
   ];
 
-  // সার্চ হ্যান্ডলার - যা আপনার সার্চ পেজকে সঠিক তথ্য পাঠাবে
   const handleSearch = (e) => {
     if (e.key === 'Enter' && search.trim() !== "") {
       router.push(`/search?q=${encodeURIComponent(search.trim())}`);
@@ -68,20 +67,19 @@ export default function Header() {
               <div className="flex items-center gap-2">
                 <Link 
                   href="/dashboard" 
-                  className="bg-yellow-400 text-black px-3 py-1.5 rounded-full text-[10px] font-black hover:bg-white transition shadow-md"
+                  className="bg-yellow-400 text-black px-2 sm:px-3 py-1.5 rounded-full text-[9px] sm:text-[10px] font-black hover:bg-white transition shadow-md"
                 >
                   MY ADS 🛠️
                 </Link>
                 <div className="flex items-center gap-2 border-l border-white/20 pl-2">
                   <img 
                     src={session.user?.image || "https://via.placeholder.com/100"} 
-                    className="w-8 h-8 rounded-full border-2 border-purple-300" 
+                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 border-purple-300" 
                     alt="user" 
                   />
                   <button 
-                    {/* লগআউট করলে হোমপেজে পাঠিয়ে দেবে */}
                     onClick={() => signOut({ callbackUrl: '/' })} 
-                    className="hidden sm:block text-[9px] font-black text-purple-200 hover:text-white uppercase tracking-tighter"
+                    className="text-[9px] font-black text-purple-200 hover:text-white uppercase tracking-tighter"
                   >
                     LOGOUT
                   </button>
@@ -89,9 +87,8 @@ export default function Header() {
               </div>
             ) : (
               <button 
-                {/* লগইন করলে যে পেজে আছেন সেখানেই ফেরত আনবে */}
                 onClick={() => signIn('google', { callbackUrl: window.location.href })} 
-                className="bg-[#7B00FF] hover:bg-white hover:text-[#7B00FF] text-white px-5 py-1.5 rounded-full font-black text-xs shadow-md transition-all border border-white/20 uppercase"
+                className="bg-[#7B00FF] hover:bg-white hover:text-[#7B00FF] text-white px-4 sm:px-5 py-1.5 rounded-full font-black text-xs shadow-md transition-all border border-white/20 uppercase"
               >
                 LOGIN
               </button>
