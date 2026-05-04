@@ -1,19 +1,20 @@
 import { NextResponse } from 'next/server';
 
 export function middleware(request) {
-  // সেশন টোকেন চেক (Vercel ও লোকাল দুই জায়গার জন্যই)
+  // সব ধরণের সম্ভাব্য সেশন টোকেন চেক করা হচ্ছে (Supabase + NextAuth)
   const token = request.cookies.get('next-auth.session-token') || 
                 request.cookies.get('__Secure-next-auth.session-token') ||
-                request.cookies.get('supabase-auth-token'); // সুপাবেস টোকেনও চেক করবে
+                request.cookies.get('sb-access-token');
   
   const { pathname } = request.nextUrl;
 
-  // যে পেজগুলো লগইন ছাড়া দেখা যাবে না
-  const protectedPaths = ['/admin', '/admin-control', '/lead', '/enquiry', '/dashboard', '/post-ad'];
+  // যে পেজগুলো আমরা লক করতে চাই
+  const protectedPaths = ['/dashboard', '/admin', '/post-ad', '/lead'];
 
+  // যদি ইউজার লক করা পেজে যেতে চায় কিন্তু লগইন করা না থাকে
   if (protectedPaths.some(path => pathname.startsWith(path))) {
     if (!token) {
-      // লগইন না থাকলে হোমপেজে পাঠিয়ে দাও
+      // তাকে হোমপেজে পাঠিয়ে দাও
       return NextResponse.redirect(new URL('/', request.url));
     }
   }
@@ -21,6 +22,12 @@ export function middleware(request) {
   return NextResponse.next();
 }
 
+// এই কনফিগটি মাস্ট লাগবে, যা বলে দেয় কোন কোন পথে নজর রাখতে হবে
 export const config = {
-  matcher: ['/admin/:path*', '/dashboard/:path*', '/lead/:path*', '/enquiry/:path*', '/post-ad'],
+  matcher: [
+    '/dashboard/:path*', 
+    '/admin/:path*', 
+    '/post-ad', 
+    '/lead/:path*'
+  ],
 };
