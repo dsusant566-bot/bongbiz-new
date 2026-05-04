@@ -17,18 +17,16 @@ export default function ProductCard({ item }) {
   };
 
   const itemPath = getSlug(item);
-
-  // সর্টিং লজিক: Featured হলে -1 (সবার আগে), Sold Out হলে 1 (সবার পরে), বাকিরা 0
   const orderStyle = item.is_featured ? -1 : item.is_sold ? 1 : 0;
 
   return (
     <div 
-      style={{ order: orderStyle }} // এই লাইনটি কার্ডের সিরিয়াল ঠিক করবে
+      style={{ order: orderStyle }} 
       className="group bg-white rounded-[2rem] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 border border-blue-50 flex flex-col h-full relative"
     >
       
-      {/* Featured/Sold Out - z-10 */}
-      <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
+      {/* Featured/Sold Out - z-index কমিয়ে ২ করা হলো */}
+      <div className="absolute top-4 left-4 z-[2] flex flex-col gap-2">
         {item.is_featured && (
           <span className="bg-yellow-400 text-black text-[10px] font-black px-3 py-1 rounded-full shadow-lg uppercase tracking-tighter">
             ⭐ Featured
@@ -41,13 +39,13 @@ export default function ProductCard({ item }) {
         )}
       </div>
 
-      {/* Watchlist - z-10 */}
-      <div className="absolute top-4 right-4 z-10">
+      {/* Watchlist (লাভ চিহ্ন) - z-index কমিয়ে ৩ করা হলো */}
+      <div className="absolute top-4 right-4 z-[3]">
         <WatchListButton adId={item.id} />
       </div>
 
-      {/* কার্ডের পুরো লিঙ্ক - z-index মাত্র ৫ */}
-      <Link href={itemPath} className="absolute inset-0 z-[5]"></Link>
+      {/* কার্ডের পুরো লিঙ্ক - z-index ১ রাখা হয়েছে */}
+      <Link href={itemPath} className="absolute inset-0 z-[1]"></Link>
 
       <div className="relative h-52 w-full overflow-hidden bg-gray-100">
         <img 
@@ -63,7 +61,6 @@ export default function ProductCard({ item }) {
           {item.title}
         </h3>
         
-        {/* লোকেশন সেকশন */}
         <div className="flex items-center justify-center text-gray-500 mb-4">
           <span className="mr-1 text-[#ff4d4d]">📍</span>
           <p className="text-[12px] font-semibold text-center leading-tight">
@@ -71,8 +68,8 @@ export default function ProductCard({ item }) {
           </p>
         </div>
         
-        {/* বাটন সেকশন - z-[1] */}
-        <div className="mt-auto pt-4 border-t border-blue-100 flex items-center justify-between relative z-[1]">
+        {/* বাটন সেকশন - z-index কমিয়ে ৪ করা হলো */}
+        <div className="mt-auto pt-4 border-t border-blue-100 flex items-center justify-between relative z-[4]">
           <span className="text-[10px] font-black text-blue-300 uppercase tracking-tighter italic shrink-0">
             {item.is_sold ? "OUT OF STOCK" : "RECENT AD"}
           </span>
@@ -87,8 +84,13 @@ export default function ProductCard({ item }) {
              
              {!item.is_sold && (
                <div className="flex items-center gap-1.5 shrink-0">
-                  <ContactLeadForm ad={item} mode="call" />
-                  <ContactLeadForm ad={item} mode="whatsapp" />
+                  {/* কন্টাক্ট বাটনগুলোর z-index ৩ রাখা হলো */}
+                  <div className="relative z-[3]">
+                    <ContactLeadForm ad={item} mode="call" />
+                  </div>
+                  <div className="relative z-[3]">
+                    <ContactLeadForm ad={item} mode="whatsapp" />
+                  </div>
                </div>
              )}
           </div>
