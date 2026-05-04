@@ -1,14 +1,28 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { supabase } from "@/lib/supabaseClient";
+import { useSession } from "next-auth/react"; // সুরক্ষা চেক
+import { useRouter } from "next/navigation"; // রিডাইরেক্ট
 
 export default function AdminLeadsPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // --- সিকিউরিটি চেক শুরু ---
   useEffect(() => {
-    fetchLeads();
-  }, []);
+    if (status === "unauthenticated" || (session && session.user.email !== "dsusant566@gmail.com")) {
+      router.push("/");
+    }
+  }, [status, session, router]);
+  // --- সিকিউরিটি চেক শেষ ---
+
+  useEffect(() => {
+    if (session && session.user.email === "dsusant566@gmail.com") {
+      fetchLeads();
+    }
+  }, [session]);
 
   const fetchLeads = async () => {
     setLoading(true);
@@ -27,19 +41,25 @@ export default function AdminLeadsPage() {
     }
   };
 
-  // ডিলিট ফাংশন
+  // পার্মানেন্ট ডিলিট ফাংশন
   const handleDelete = async (id) => {
-    if (confirm("আপনি কি নিশ্চিত যে এই লিডটি ডিলিট করতে চান?")) {
+    if (confirm("আপনি কি নিশ্চিত যে এই লিডটি চিরতরে ডিলিট করতে চান? (এটি ডাটাবেস থেকেও মুছে যাবে)")) {
       try {
         const { error } = await supabase.from('visitor_leads').delete().eq('id', id);
         if (error) throw error;
+        
+        // ডাটাবেস থেকে ডিলিট হওয়ার পর লিস্ট আপডেট
         setLeads(leads.filter(lead => lead.id !== id));
-        alert("লিড সফলভাবে ডিলিট হয়েছে।");
+        alert("লিড সফলভাবে চিরতরে ডিলিট হয়েছে।");
       } catch (err) {
         alert("ডিলিট করতে সমস্যা হয়েছে: " + err.message);
       }
     }
   };
+
+  // লোডিং বা আনঅথরাইজড ইউজার হলে কিছুই দেখাবে না
+  if (status === "loading") return <div className="text-center py-20 font-black uppercase text-slate-400">Checking Access...</div>;
+  if (!session || session.user.email !== "dsusant566@gmail.com") return null;
 
   return (
     <div className="min-h-screen bg-slate-50 p-4 md:p-10 font-sans">
@@ -89,7 +109,6 @@ export default function AdminLeadsPage() {
                       <td className="p-5 text-slate-500 font-medium">{lead.item_title || 'N/A'}</td>
                       <td className="p-5">
                         <div className="flex items-center justify-center gap-3">
-                          {/* কল বাটন */}
                           <a 
                             href={`tel:${lead.visitor_phone}`} 
                             className="bg-green-100 text-green-600 p-2.5 rounded-xl hover:bg-green-600 hover:text-white transition-all shadow-sm"
@@ -97,7 +116,6 @@ export default function AdminLeadsPage() {
                           >
                             📞
                           </a>
-                          {/* ডিলিট বাটন */}
                           <button 
                             onClick={() => handleDelete(lead.id)}
                             className="bg-red-50 text-red-500 p-2.5 rounded-xl hover:bg-red-500 hover:text-white transition-all shadow-sm"
