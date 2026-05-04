@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { supabase } from "@/lib/supabaseClient";
 
 export default function LoginPage() {
@@ -9,14 +9,13 @@ export default function LoginPage() {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
 
-  // গুগল লগইন ফাংশন
+  // গুগল লগইন ফাংশন - এখন ড্যাশবোর্ডে জোর করে পাঠাবে না
   async function loginWithGoogle() {
     setLoading(true);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { 
-        // এখানে একদম নির্দিষ্ট করে দেওয়া হয়েছে যাতে admin ফোল্ডারে না যায়
-        redirectTo: `${window.location.origin}/dashboard` 
+        redirectTo: `${window.location.origin}` 
       }
     });
     if (error) {
@@ -32,8 +31,7 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithOtp({
       email: email,
       options: { 
-        // ওটিপির লিঙ্কেও রিডাইরেক্ট পাথ ফিক্স করা হলো
-        emailRedirectTo: `${window.location.origin}/dashboard` 
+        emailRedirectTo: `${window.location.origin}` 
       }
     });
     setLoading(false);
@@ -56,8 +54,8 @@ export default function LoginPage() {
     });
 
     if (!error) {
-      // সফল হলে ম্যানুয়ালি নতুন ড্যাশবোর্ডে পাঠানো হচ্ছে
-      window.location.href = '/dashboard';
+      // সফল হলে হোমপেজে বা আগের পেজে পাঠানো হচ্ছে
+      window.location.href = '/';
     } else {
       alert("ভুল ওটিপি!");
       setLoading(false);
@@ -74,7 +72,6 @@ export default function LoginPage() {
           <div className="h-1 w-20 bg-blue-600 mx-auto mt-2 rounded-full"></div>
         </div>
 
-        {/* গুগল বাটন */}
         <button 
           onClick={loginWithGoogle} 
           className="w-full flex items-center justify-center gap-3 bg-white border-2 border-slate-100 py-4 rounded-2xl font-black text-[10px] uppercase hover:bg-slate-50 transition-all shadow-sm"

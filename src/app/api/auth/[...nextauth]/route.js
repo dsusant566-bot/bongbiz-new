@@ -9,10 +9,13 @@ const handler = NextAuth({
     }),
   ],
   secret: process.env.NEXTAUTH_SECRET,
-  // লগইন সফল হলে যেখানে যাবে
   callbacks: {
     async redirect({ url, baseUrl }) {
-      return baseUrl + '/dashboard';
+      // যদি url-এ কোনো বিশেষ গন্তব্য থাকে তবে সেখানে যাবে, নাহলে হোমপেজে থাকবে
+      // এখানে জোর করে '/dashboard' যোগ করা বন্ধ করা হলো
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      else if (new URL(url).origin === baseUrl) return url;
+      return baseUrl;
     },
   },
 });
