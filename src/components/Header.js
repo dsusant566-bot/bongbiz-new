@@ -1,13 +1,19 @@
 "use client";
 import { signIn, signOut, useSession } from "next-auth/react";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react"; // useEffect যোগ করা হয়েছে
 import { useRouter } from "next/navigation"; 
 
 export default function Header() {
   const { data: session } = useSession();
   const [search, setSearch] = useState("");
+  const [currentUrl, setCurrentUrl] = useState(""); // URL সেভ করার জন্য
   const router = useRouter();
+
+  // ব্রাউজারের বর্তমান URL নেওয়ার জন্য
+  useEffect(() => {
+    setCurrentUrl(window.location.href);
+  }, []);
 
   const categories = [
     { name: "All", link: "/" },
@@ -58,11 +64,6 @@ export default function Header() {
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
-            <Link href="/watchlist" className="hidden md:flex items-center gap-1 hover:text-purple-300 transition text-sm font-medium">
-              <span>❤️</span>
-              <span className="text-xs">Watchlist</span>
-            </Link>
-
             {session ? (
               <div className="flex items-center gap-2">
                 <Link 
@@ -87,7 +88,8 @@ export default function Header() {
               </div>
             ) : (
               <button 
-                onClick={() => signIn('google', { callbackUrl: window.location.href })} 
+                /* এখানে callbackUrl সেট করা হয়েছে যাতে লগইন করার পর ইউজার ড্যাশবোর্ডে না যায় */
+                onClick={() => signIn('google', { callbackUrl: currentUrl })} 
                 className="bg-[#7B00FF] hover:bg-white hover:text-[#7B00FF] text-white px-4 sm:px-5 py-1.5 rounded-full font-black text-xs shadow-md transition-all border border-white/20 uppercase"
               >
                 LOGIN
@@ -97,6 +99,7 @@ export default function Header() {
         </div>
       </div>
 
+      {/* ক্যাটাগরি মেনু */}
       <div className="bg-white border-b border-gray-200 overflow-x-auto no-scrollbar">
         <div className="max-w-7xl mx-auto px-4 py-3 flex justify-start md:justify-center gap-8 whitespace-nowrap">
           {categories.map((cat) => (
