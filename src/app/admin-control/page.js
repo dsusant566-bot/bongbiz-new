@@ -1,8 +1,13 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { supabase } from "@/lib/supabaseClient";
+import { useSession } from "next-auth/react"; // সেশন চেক করার জন্য যোগ করা হয়েছে
+import { useRouter } from "next/navigation"; // রিডাইরেক্ট করার জন্য যোগ করা হয়েছে
 
 export default function AdminControlPage() {
+  const { data: session, status } = useSession(); // সেশন ডেটা
+  const router = useRouter();
+  
   const [allAds, setAllAds] = useState([]);
   const [loading, setLoading] = useState(true);
   
@@ -20,9 +25,18 @@ export default function AdminControlPage() {
     contact_number: ''
   });
 
+  // --- সিকিউরিটি লজিক: শুধুমাত্র dsusant566@gmail.com এক্সেস পাবে ---
   useEffect(() => {
-    fetchAllAds();
-  }, []);
+    if (status === "unauthenticated" || (session && session.user.email !== "dsusant566@gmail.com")) {
+      router.push("/");
+    }
+  }, [status, session, router]);
+
+  useEffect(() => {
+    if (session && session.user.email === "dsusant566@gmail.com") {
+      fetchAllAds();
+    }
+  }, [session]);
 
   const fetchAllAds = async () => {
     setLoading(true);
@@ -42,7 +56,7 @@ export default function AdminControlPage() {
     }
   };
 
-  // --- নতুন ফাংশন: Featured বা Sold স্ট্যাটাস টগল করার জন্য ---
+  // স্ট্যাটাস টগল করার ফাংশন (আগের মতোই আছে)
   const toggleStatus = async (id, field, currentValue) => {
     try {
       const { error } = await supabase
@@ -51,8 +65,6 @@ export default function AdminControlPage() {
         .eq('id', id);
 
       if (error) throw error;
-      
-      // লোকাল স্টেট আপডেট করা যাতে পেজ রিফ্রেশ ছাড়াই বাটন কালার চেঞ্জ হয়
       setAllAds(allAds.map(ad => ad.id === id ? { ...ad, [field]: !currentValue } : ad));
     } catch (err) {
       alert("স্ট্যাটাস আপডেট করতে সমস্যা হয়েছে: " + err.message);
@@ -125,6 +137,10 @@ export default function AdminControlPage() {
     }
   };
 
+  // লোডিং বা আনঅথরাইজড ইউজার হলে পেজ রেন্ডার হবে না
+  if (status === "loading") return <div className="text-center py-20 font-black uppercase tracking-widest text-xs">Checking Admin Access...</div>;
+  if (!session || session.user.email !== "dsusant566@gmail.com") return null;
+
   return (
     <div className="min-h-screen bg-slate-50 p-4 md:p-10 font-sans text-slate-900">
       <div className="max-w-6xl mx-auto">
@@ -155,9 +171,7 @@ export default function AdminControlPage() {
                   </div>
                 </div>
 
-                {/* কন্ট্রোল বাটন সেকশন */}
                 <div className="flex flex-wrap gap-2 w-full md:w-auto justify-end">
-                  {/* Featured Toggle */}
                   <button 
                     onClick={() => toggleStatus(ad.id, 'is_featured', ad.is_featured)}
                     className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase transition-all border ${ad.is_featured ? 'bg-yellow-400 border-yellow-500 text-black shadow-inner' : 'bg-white border-slate-200 text-slate-400 hover:bg-yellow-50'}`}
@@ -165,7 +179,6 @@ export default function AdminControlPage() {
                     {ad.is_featured ? "⭐ Featured" : "Make Featured"}
                   </button>
 
-                  {/* Sold Toggle */}
                   <button 
                     onClick={() => toggleStatus(ad.id, 'is_sold', ad.is_sold)}
                     className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase transition-all border ${ad.is_sold ? 'bg-red-600 border-red-700 text-white shadow-lg' : 'bg-white border-slate-200 text-slate-400 hover:bg-red-50'}`}
@@ -173,7 +186,6 @@ export default function AdminControlPage() {
                     {ad.is_sold ? "🚫 Sold Out" : "Mark as Sold"}
                   </button>
 
-                  {/* Edit & Delete */}
                   <button onClick={() => startEdit(ad)} className="bg-slate-900 text-white px-4 py-2 rounded-xl text-[9px] font-black uppercase hover:bg-blue-600 transition-all shadow-sm">Edit</button>
                   <button onClick={() => softDeleteAd(ad.id, ad.title)} className="bg-red-50 text-red-400 px-4 py-2 rounded-xl text-[9px] font-black uppercase hover:bg-red-600 hover:text-white transition-all">Delete</button>
                 </div>
@@ -183,7 +195,6 @@ export default function AdminControlPage() {
         )}
       </div>
 
-      {/* --- এডিট মোডাল (আগের মতোই আছে) --- */}
       {editingAd && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
           <div className="bg-white rounded-[2.5rem] p-8 max-w-2xl w-full shadow-2xl my-8">

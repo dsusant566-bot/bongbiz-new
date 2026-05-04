@@ -1,8 +1,24 @@
 "use client";
-import React from 'react';
+import React, { useEffect } from 'react'; // useEffect যোগ করা হয়েছে
 import Link from 'next/link';
+import { useSession } from "next-auth/react"; // সেশন চেক করার জন্য
+import { useRouter } from "next/navigation"; // রিডাইরেক্ট করার জন্য
 
 export default function AdminMaster() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  // সিকিউরিটি চেক: dsusant566@gmail.com ছাড়া অন্য কেউ ঢুকলে তাকে বের করে দেবে
+  useEffect(() => {
+    if (status === "unauthenticated" || (session && session.user.email !== "dsusant566@gmail.com")) {
+      router.push("/");
+    }
+  }, [status, session, router]);
+
+  // লোডিং অবস্থায় বা ভুল ইউজারের ক্ষেত্রে পেজ দেখাবে না
+  if (status === "loading") return <div className="p-10 text-center font-bold">Checking Access...</div>;
+  if (!session || session.user.email !== "dsusant566@gmail.com") return null;
+
   const adminTools = [
     { title: "Manage Ads", desc: "Featured/Sold Out কন্ট্রোল করুন", link: "/admin-control", color: "bg-sky-500" },
     { title: "User Enquiries", desc: "ব্যবহারকারীদের ইনকোয়ারি দেখুন", link: "/admin-enquiries", color: "bg-emerald-600" },
@@ -26,9 +42,10 @@ export default function AdminMaster() {
             BONGO<span className="text-blue-600">BIZ</span> <span className="text-slate-700">ADMIN CENTRAL</span>
           </h1>
           <p className="text-slate-500 font-bold uppercase text-[10px] mt-3 tracking-[0.3em]">Master Control Panel V1.0</p>
+          <p className="text-blue-600 text-[10px] font-bold mt-1">LOGGED IN AS: {session.user.email}</p>
         </header>
 
-        {/* Admin Tools - ৩টি কার্ডই যাতে পরিষ্কার দেখা যায় */}
+        {/* Admin Tools */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
           {adminTools.map((tool, index) => (
             <Link key={index} href={tool.link} className="group flex">
