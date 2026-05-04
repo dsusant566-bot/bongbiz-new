@@ -7,27 +7,23 @@ export async function middleware(req) {
 
   const adminEmail = "dsusant566@gmail.com";
 
-  // ১. সুরক্ষিত পাথগুলোর তালিকা
   const protectedPaths = ['/dashboard', '/post-ad', '/admin', '/admin-control', '/admin-leads', '/admin-enquiries'];
   const adminPaths = ['/admin', '/admin-control', '/admin-leads', '/admin-enquiries'];
 
   const isProtected = protectedPaths.some(path => pathname.startsWith(path));
   const isAdminPath = adminPaths.some(path => pathname.startsWith(path));
 
-  // ২. যদি লগইন না থাকে এবং প্রটেক্টেড পাথে যেতে চায়, তবে তাকে আটকে দাও
   if (isProtected && !token) {
-    // এখানে রিডাইরেক্ট করার সময় কোনো callbackUrl জোর করে ড্যাশবোর্ডে পাঠাবেন না
-    return NextResponse.redirect(new URL('/', req.url));
+    const url = new URL('/', req.url);
+    return NextResponse.redirect(url);
   }
 
-  // ৩. অ্যাডমিন পাথে শুধু আপনার ইমেল আইডি ভেরিফিকেশন
   if (isAdminPath) {
     if (token && token.email !== adminEmail) {
       return NextResponse.redirect(new URL('/', req.url));
     }
   }
 
-  // ৪. লগইন করার পর অটোমেটিক ড্যাশবোর্ডে পাঠানোর কোনো কোড এখানে রাখা যাবে না
   return NextResponse.next();
 }
 
