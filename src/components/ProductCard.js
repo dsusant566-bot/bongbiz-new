@@ -71,28 +71,25 @@ export default function ProductCard({ item }) {
           </p>
         </div>
         
-        {/* বাটন সেকশন - z-[1] */}
-        <div className="mt-auto pt-4 border-t border-blue-100 flex items-center justify-between relative z-[50]">
-          <span className="text-[10px] font-black text-blue-300 uppercase tracking-tighter italic shrink-0">
-            {item.is_sold ? "OUT OF STOCK" : "RECENT AD"}
-          </span>
-          
-          <div className="flex items-center gap-1.5 flex-nowrap">
-             <Link 
-               href={itemPath} 
-               className="bg-slate-100 text-slate-500 px-2 py-1.5 rounded-xl text-[9px] font-black uppercase hover:bg-black hover:text-white transition-all shadow-sm shrink-0"
-             >
-               VIEW
-             </Link>
-             
-             {!item.is_sold && (
-               <div className="flex items-center gap-1.5 shrink-0">
-                  <ContactLeadForm ad={item} mode="call" />
-                  <ContactLeadForm ad={item} mode="whatsapp" />
-               </div>
-             )}
-          </div>
-        </div>
+        {/* বাটন সেকশন - এখানে overflow-visible রাখা হয়েছে যাতে বাটন ঠিকমতো কাজ করে */}
+<div className="mt-auto pt-4 border-t border-blue-50 flex items-center justify-between overflow-visible">
+  
+  <div className="flex flex-col shrink-0">
+    <span className="text-[8px] font-black text-blue-300 uppercase italic leading-none mb-1">RECENT AD</span>
+    <Link href={itemPath} className="text-[9px] font-black text-slate-400 uppercase hover:text-black leading-none">VIEW DETAILS</Link>
+  </div>
+
+  {/* বাটন কন্টেনার - এখানে relative z-[50] আর pointer-events-auto দিলে মোবাইলে টাচ কাজ করবেই */}
+  <div className="flex items-center gap-2 shrink-0 relative z-[50] pointer-events-auto">
+     {!item.is_sold && (
+       <>
+         <ContactLeadForm ad={item} mode="call" />
+         <ContactLeadForm ad={item} mode="whatsapp" />
+       </>
+     )}
+  </div>
+
+</div>
       </div>
     </div>
   );
