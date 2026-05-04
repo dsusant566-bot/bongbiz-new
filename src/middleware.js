@@ -7,19 +7,17 @@ export async function middleware(req) {
 
   const adminEmail = "dsusant566@gmail.com";
 
-  const protectedPaths = ['/dashboard', '/post-ad', '/admin', '/admin-control', '/admin-leads', '/admin-enquiries'];
-  const adminPaths = ['/admin', '/admin-control', '/admin-leads', '/admin-enquiries'];
-
-  const isProtected = protectedPaths.some(path => pathname.startsWith(path));
-  const isAdminPath = adminPaths.some(path => pathname.startsWith(path));
-
-  if (isProtected && !token) {
-    const url = new URL('/', req.url);
-    return NextResponse.redirect(url);
+  // যদি ইউজার লগইন না থাকে এবং সে সরাসরি পোস্ট-অ্যাড পেজে যেতে চায়
+  if (pathname.startsWith('/post-ad') && !token) {
+    // লগইন করার পর সরাসরি তাকে পোস্ট-অ্যাড পেজেই পাঠাতে বাধ্য করা হবে
+    const loginUrl = new URL('/', req.url);
+    return NextResponse.redirect(loginUrl);
   }
 
-  if (isAdminPath) {
-    if (token && token.email !== adminEmail) {
+  // অ্যাডমিন পাথ সুরক্ষা
+  const adminPaths = ['/admin', '/admin-control', '/admin-leads', '/admin-enquiries'];
+  if (adminPaths.some(path => pathname.startsWith(path))) {
+    if (!token || token.email !== adminEmail) {
       return NextResponse.redirect(new URL('/', req.url));
     }
   }
@@ -28,12 +26,5 @@ export async function middleware(req) {
 }
 
 export const config = {
-  matcher: [
-    '/dashboard/:path*', 
-    '/admin/:path*', 
-    '/admin-control/:path*', 
-    '/admin-leads/:path*',
-    '/admin-enquiries/:path*',
-    '/post-ad'
-  ],
+  matcher: ['/post-ad', '/dashboard/:path*', '/admin/:path*'],
 };
