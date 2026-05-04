@@ -6,14 +6,12 @@ import ContactLeadForm from "../../../components/ContactLeadForm";
 import ImageGallery from "@/components/ImageGallery";
 import WatchListButton from "@/components/WatchListButton";
 import { getIdFromSlug } from "@/lib/utils"; 
-// আপনার সেই অরিজিনাল ইমপোর্ট, যা আমি আগে সরিয়েছিলাম, তা আবার যোগ করা হলো
 import { unstable_isUnrecognizedActionError } from 'next/dist/client/components/navigation.react-server';
 
 export default function AdDetails({ params }) {
   const [ad, setAd] = useState(null);
   const [similarAds, setSimilarAds] = useState([]);
   const [loading, setLoading] = useState(true);
-  // পপ-আপের জন্য ২টো নতুন স্টেট যোগ করা হলো, যা আপনার পুরনো কোডে ছিল না
   const [showModal, setShowModal] = useState(false);
   const [activeImage, setActiveImage] = useState("");
 
@@ -32,7 +30,6 @@ export default function AdDetails({ params }) {
 
         if (adError || !adData) throw adError;
         setAd(adData);
-        // মেইন পেজ লোড হলে প্রথম ছবিটা সেভ হবে পপ-আপের জন্য
         setActiveImage(adData.image_url_1);
 
         const { data: similarData } = await supabase
@@ -69,7 +66,7 @@ export default function AdDetails({ params }) {
   return (
     <div className="min-h-screen bg-white text-black font-sans">
       
-      {/* Schema Markup for SEO - হুবহু আগের মতোই আছে */}
+      {/* Schema Markup for SEO */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -89,7 +86,7 @@ export default function AdDetails({ params }) {
         }}
       />
 
-      {/* Blue Search Bar Area - একদম অরিজিনাল */}
+      {/* Blue Search Bar Area */}
       <div className="w-full bg-[#007bff] p-4 shadow-sm">
         <div className="max-w-6xl mx-auto flex items-center bg-white/20 backdrop-blur-md rounded-full px-5 py-3 border border-white/30">
           <span className="text-white mr-3">🔍</span>
@@ -104,7 +101,7 @@ export default function AdDetails({ params }) {
 
       <div className="max-w-6xl mx-auto p-4 md:p-10">
         
-        {/* ক্যাটাগরি ও ম্যাপ লিঙ্ক - সাইজ রেসপনসিভ করা হয়েছে যাতে ফোনে সুন্দর লাগে */}
+        {/* Category & Map Tags */}
         <div className="flex flex-wrap items-center gap-3 mb-8">
           <div className="flex items-center bg-[#00a2ed] rounded-full overflow-hidden shadow-md">
              <span className="text-[9px] md:text-[10px] font-black uppercase text-white px-4 py-2.5 border-r border-white/20">
@@ -132,7 +129,6 @@ export default function AdDetails({ params }) {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
            
            <div className="lg:col-span-2">
-             {/* 이미지 গ্যালারিতে onImageClick যোগ করা হলো পপ-আপের জন্য */}
              <div className="relative">
                <ImageGallery 
                  ad={ad} 
@@ -150,13 +146,11 @@ export default function AdDetails({ params }) {
                )}
              </div>
 
-             {/* Description - লেখা রেসপনসিভ করা হয়েছে */}
              <div className="mt-8 bg-slate-50 rounded-[3rem] p-6 md:p-8 shadow-inner border border-gray-100">
                <h2 className="text-lg md:text-2xl font-black uppercase italic border-l-8 border-[#007bff] pl-4 mb-4">Description</h2>
                <p className="font-bold text-slate-700 whitespace-pre-wrap leading-relaxed text-xs md:text-sm">{ad.description}</p>
              </div>
 
-             {/* Safety Tips for Buyers - একদম অরিজিনাল */}
              <div className="mt-8 p-6 md:p-8 rounded-[3rem] border-2 border-dashed border-orange-200 bg-orange-50">
                 <h3 className="text-[10px] md:text-sm font-black uppercase text-orange-600 mb-3 italic">Safety Tips for Buyers</h3>
                 <ul className="text-[9px] md:text-[11px] font-bold text-slate-600 space-y-2 list-disc pl-5">
@@ -168,7 +162,6 @@ export default function AdDetails({ params }) {
            </div>
            
            <div className="space-y-6">
-              {/* স্টিকি প্যানেল - প্যাডিং ও ফন্ট ফোনের জন্য রেসপনসিভ */}
               <div className="bg-white rounded-[2rem] md:rounded-[3rem] p-6 md:p-10 shadow-2xl border border-gray-100 h-fit lg:sticky lg:top-24">
                   
                   <div className="flex flex-wrap gap-2 mb-6">
@@ -202,9 +195,32 @@ export default function AdDetails({ params }) {
                     </div>
                   )}
 
+                  {/* এখানে শেয়ার এবং লিঙ্ক বাটন আপডেট করা হলো */}
                   <div className="mt-6 flex items-center justify-center gap-4">
-                     <button title="Share" className="p-3 bg-blue-100 text-blue-600 rounded-full hover:bg-blue-600 hover:text-white transition-all text-xs">👥</button>
-                     <button title="Link" className="p-3 bg-gray-100 text-gray-600 rounded-full hover:bg-gray-800 hover:text-white transition-all text-xs">🔗</button>
+                     <button 
+                       onClick={() => {
+                         if (navigator.share) {
+                           navigator.share({ title: ad.title, url: window.location.href }).catch(console.error);
+                         } else {
+                           alert("Sharing not supported on this browser.");
+                         }
+                       }}
+                       title="Share" 
+                       className="p-3 bg-blue-100 text-blue-600 rounded-full hover:bg-blue-600 hover:text-white transition-all text-xs"
+                     >
+                       👥
+                     </button>
+
+                     <button 
+                       onClick={() => {
+                         navigator.clipboard.writeText(window.location.href);
+                         alert("Link copied to clipboard!");
+                       }}
+                       title="Copy Link" 
+                       className="p-3 bg-gray-100 text-gray-600 rounded-full hover:bg-gray-800 hover:text-white transition-all text-xs"
+                     >
+                       🔗
+                     </button>
                   </div>
 
                   <div className="mt-8 pt-6 border-t border-gray-100 space-y-3">
@@ -225,7 +241,7 @@ export default function AdDetails({ params }) {
            </div>
         </div>
 
-        {/* Similar Ads Section - একদম অরিজিনাল */}
+        {/* Similar Ads Section */}
         {similarAds && similarAds.length > 0 && (
           <div className="mt-16 md:mt-20">
             <h2 className="text-lg md:text-2xl font-black uppercase italic mb-8 border-l-8 border-blue-600 pl-4">Similar Recommendations</h2>
@@ -248,7 +264,7 @@ export default function AdDetails({ params }) {
         )}
       </div>
 
-      {/* ইমেজ পপ-আপ মডেল (Modal) - এটি একটি নতুন সংযোজন, যা আপনার পুরনো ডিজাইনে ছিল না */}
+      {/* Image Modal Popup */}
       {showModal && (
         <div 
           className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-md flex items-center justify-center p-4 cursor-zoom-out"
