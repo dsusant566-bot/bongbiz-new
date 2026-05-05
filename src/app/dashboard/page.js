@@ -3,24 +3,42 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from "@/lib/supabaseClient";
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function Dashboard() {
   const [ads, setAds] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(true); // লগইন চেক করার জন্য
   const [selectedAdLeads, setSelectedAdLeads] = useState([]); 
   const [showLeadModal, setShowLeadModal] = useState(false);
   const [modalLoading, setModalLoading] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
-    fetchAds();
+    checkUserAndFetchAds();
   }, []);
 
-  async function fetchAds() {
+  async function checkUserAndFetchAds() {
+    setAuthLoading(true);
+    
+    // ১. চেক করা হচ্ছে ইউজার লগইন আছে কি না
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (!session) {
+      // লগইন না থাকলে সরাসরি হোম পেজে পাঠিয়ে দাও
+      router.replace('/'); 
+      return;
+    }
+
+    setAuthLoading(false);
     setLoading(true);
+
+    // ২. শুধুমাত্র লগইন করা ইউজারের ইমেইল দিয়ে ফিল্টার করা (Email Mapping)
     const { data, error } = await supabase
       .from('listings')
       .select('*')
       .eq('is_deleted', false)
+      .eq('user_email', session.user.email) // এখানে ম্যাপিং হচ্ছে
       .order('created_at', { ascending: false });
 
     if (!error) {
@@ -31,7 +49,11 @@ export default function Dashboard() {
     setLoading(false);
   }
 
-  // নির্দিষ্ট একটি অ্যাডের লিড দেখার ফাংশন
+  // সেশন চেক চলাকালীন কিছুই দেখাবে না
+  if (authLoading) {
+    return <div className="min-h-screen bg-gray-50 flex items-center justify-center font-black text-blue-600 uppercase">Checking Access...</div>;
+  }
+
   async function viewLeads(adId) {
     setShowLeadModal(true);
     setModalLoading(true);
@@ -43,8 +65,6 @@ export default function Dashboard() {
 
     if (!error) {
       setSelectedAdLeads(data);
-    } else {
-      console.error("Error fetching leads:", error.message);
     }
     setModalLoading(false);
   }
@@ -57,10 +77,7 @@ export default function Dashboard() {
         .eq('id', id);
 
       if (!error) {
-        alert("অ্যাডটি সরানো হয়েছে।");
-        fetchAds(); 
-      } else {
-        alert("সমস্যা হয়েছে: " + error.message);
+        checkUserAndFetchAds(); 
       }
     }
   }
@@ -72,7 +89,7 @@ export default function Dashboard() {
           <h1 className="text-2xl font-black text-slate-800 uppercase italic">
             Admin <span className="text-blue-600">Dashboard</span>
           </h1>
-          <Link href='/post-ad' className="bg-blue-600 text-white px-6 py-2 rounded-xl font-bold text-xs uppercase shadow-lg hover:bg-black transition-all">
+          <Link href='/post-ad' className="bg-blue-600 text-white px-6 py-2 rounded-xl font-bold text-xs uppercase shadow-lg">
             + New Ad
           </Link>
         </div>
@@ -90,7 +107,7 @@ export default function Dashboard() {
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan="4" className="p-10 text-center font-bold text-gray-400">LOADING...</td></tr>
+                  <tr><td colSpan="4" className="p-10 text-center font-bold text-gray-400 animate-pulse">LOADING...</td></tr>
                 ) : ads.length > 0 ? (
                   ads.map((ad) => (
                     <tr key={ad.id} className="border-b border-gray-50 hover:bg-blue-50 transition-colors">
@@ -104,21 +121,15 @@ export default function Dashboard() {
                       <td className="p-4 font-black text-blue-600 text-sm">₹{ad.price}</td>
                       <td className="p-4">
                         <div className="flex justify-center gap-2">
-                          <button onClick={() => viewLeads(ad.id)} title="View Leads" className="bg-blue-100 text-blue-600 px-3 py-2 rounded-lg hover:bg-blue-600 hover:text-white transition-all text-lg shadow-sm">
-                            👁️
-                          </button>
-                          <Link href={`/dashboard/edit/${ad.id}`} className="bg-amber-100 text-amber-600 px-4 py-2 rounded-lg hover:bg-amber-600 hover:text-white transition-all text-[10px] font-black uppercase">
-                            Edit
-                          </Link>
-                          <button onClick={() => deleteAd(ad.id)} className="bg-red-100 text-red-600 px-4 py-2 rounded-lg hover:bg-red-600 hover:text-white transition-all text-[10px] font-black uppercase">
-                            Delete
-                          </button>
+                          <button onClick={() => viewLeads(ad.id)} title="View Leads" className="bg-blue-100 text-blue-600 px-3 py-2 rounded-lg hover:bg-blue-600 hover:text-white transition-all text-lg shadow-sm">👁️</button>
+                          <Link href={`/dashboard/edit/${ad.id}`} className="bg-amber-100 text-amber-600 px-4 py-2 rounded-lg hover:bg-amber-600 hover:text-white transition-all text-[10px] font-black uppercase">Edit</Link>
+                          <button onClick={() => deleteAd(ad.id)} className="bg-red-100 text-red-600 px-4 py-2 rounded-lg hover:bg-red-600 hover:text-white transition-all text-[10px] font-black uppercase">Delete</button>
                         </div>
                       </td>
                     </tr>
                   ))
                 ) : (
-                  <tr><td colSpan="4" className="p-20 text-center text-gray-300 font-black uppercase text-xs">No Ads Found</td></tr>
+                  <tr><td colSpan="4" className="p-20 text-center text-gray-300 font-black uppercase text-xs">No Ads Found for your account</td></tr>
                 )}
               </tbody>
             </table>
@@ -126,53 +137,28 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* --- Leads Modal (পপ-আপ উইন্ডো) --- */}
+      {/* --- Leads Modal --- */}
       {showLeadModal && (
-        <div 
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
-          onClick={() => setShowLeadModal(false)} 
-        >
-          <div 
-            className="bg-white rounded-[2.5rem] p-8 max-w-md w-full max-h-[80vh] overflow-y-auto shadow-2xl relative"
-            onClick={(e) => e.stopPropagation()} 
-          >
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={() => setShowLeadModal(false)}>
+          <div className="bg-white rounded-[2.5rem] p-8 max-w-md w-full max-h-[80vh] overflow-y-auto shadow-2xl relative" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-6 sticky top-0 bg-white pb-4 border-b border-gray-100">
               <h2 className="text-xl font-black text-slate-900 uppercase italic">Ad Contact Leads</h2>
-              <button 
-                onClick={() => setShowLeadModal(false)} 
-                className="bg-red-50 text-red-600 px-3 py-1 rounded-full text-[10px] font-black uppercase hover:bg-red-600 hover:text-white transition-all shadow-sm"
-              >
-                Close ✕
-              </button>
+              <button onClick={() => setShowLeadModal(false)} className="bg-red-50 text-red-600 px-3 py-1 rounded-full text-[10px] font-black uppercase hover:bg-red-600 hover:text-white transition-all shadow-sm">✕</button>
             </div>
-            
-            {modalLoading ? (
-              <div className="text-center py-10 font-black text-blue-500 animate-pulse uppercase">Loading Leads...</div>
-            ) : selectedAdLeads.length > 0 ? (
+            {modalLoading ? <div className="text-center py-10 font-black text-blue-500 animate-pulse uppercase">Loading Leads...</div> : 
+              selectedAdLeads.length > 0 ? (
               <div className="space-y-4">
                 {selectedAdLeads.map(lead => (
                   <div key={lead.id} className="p-5 bg-slate-50 rounded-[2rem] flex justify-between items-center border border-slate-100">
                     <div>
                       <p className="font-black text-slate-900 uppercase text-[11px] leading-none mb-1">{lead.visitor_name}</p>
                       <p className="text-blue-600 font-bold text-sm tracking-tight">{lead.visitor_phone}</p>
-                      <p className="text-[8px] text-gray-400 font-bold uppercase mt-1">
-                        {new Date(lead.created_at).toLocaleDateString('en-IN')}
-                      </p>
                     </div>
-                    <a 
-                      href={`tel:${lead.visitor_phone}`} 
-                      className="bg-green-500 text-white w-10 h-10 rounded-full flex items-center justify-center shadow-md hover:bg-black transition-all"
-                    >
-                      📞
-                    </a>
+                    <a href={`tel:${lead.visitor_phone}`} className="bg-green-500 text-white w-10 h-10 rounded-full flex items-center justify-center shadow-md">📞</a>
                   </div>
                 ))}
               </div>
-            ) : (
-              <div className="text-center py-20 text-gray-300 font-bold italic uppercase tracking-widest">
-                No leads for this ad yet.
-              </div>
-            )}
+            ) : <div className="text-center py-20 text-gray-300 font-bold italic uppercase tracking-widest">No leads yet.</div>}
           </div>
         </div>
       )}
