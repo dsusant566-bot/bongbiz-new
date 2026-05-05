@@ -7,17 +7,17 @@ export async function middleware(req) {
 
   const adminEmail = "dsusant566@gmail.com";
 
-  // ১. পোস্ট-অ্যাড পেজ সুরক্ষা (আগের মতোই)
+  // যদি ইউজার লগইন না থাকে এবং সে সরাসরি পোস্ট-অ্যাড পেজে যেতে চায়
   if (pathname.startsWith('/post-ad') && !token) {
+    // লগইন করার পর সরাসরি তাকে পোস্ট-অ্যাড পেজেই পাঠাতে বাধ্য করা হবে
     const loginUrl = new URL('/', req.url);
     return NextResponse.redirect(loginUrl);
   }
 
-  // ২. অ্যাডমিন পাথ সুরক্ষা (আপনার অরিজিনাল কড়া সিকিউরিটি)
+  // অ্যাডমিন পাথ সুরক্ষা
   const adminPaths = ['/admin', '/admin-control', '/admin-leads', '/admin-enquiries'];
   if (adminPaths.some(path => pathname.startsWith(path))) {
     if (!token || token.email !== adminEmail) {
-      // আপনার জিমেইল না হলে সোজা হোম পেজে রিডাইরেক্ট
       return NextResponse.redirect(new URL('/', req.url));
     }
   }
@@ -26,7 +26,5 @@ export async function middleware(req) {
 }
 
 export const config = {
-  // ড্যাশবোর্ড এখান থেকে সরানো হয়েছে যাতে সুপাবেজ সেশনে বাধা না পড়ে
-  // কিন্তু অ্যাডমিন এবং পোস্ট-অ্যাড আগের মতোই মিডলওয়্যার দিয়ে সুরক্ষিত
-  matcher: ['/post-ad', '/admin/:path*', '/admin-control/:path*', '/admin-leads/:path*', '/admin-enquiries/:path*'],
+  matcher: ['/post-ad', '/dashboard/:path*', '/admin/:path*'],
 };
