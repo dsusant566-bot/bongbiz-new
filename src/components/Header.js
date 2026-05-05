@@ -1,18 +1,51 @@
 "use client";
-import { signIn, signOut, useSession } from "next-auth/react";
+import { supabase } from "@/lib/supabaseClient"; // Supabase ইমপোর্ট
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation"; 
 
 export default function Header() {
-  const { data: session, status } = useSession();
+  const [user, setUser] = useState(null); // ইউজার স্টেট
   const [search, setSearch] = useState("");
   const router = useRouter();
+
+  // ১. সুপাবেজ সেশন চেক করা (Next-Auth এর বদলে)
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user || null);
+    };
+
+    checkUser();
+
+    // সেশন চেঞ্জ হলে আপডেট করার জন্য লিসেনার
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user || null);
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
 
   const handleSearch = (e) => {
     if (e.key === 'Enter' && search.trim() !== "") {
       router.push(`/search?q=${encodeURIComponent(search.trim())}`);
     }
+  };
+
+  const handleLogin = async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`, // লগইন হলে ড্যাশবোর্ডে পাঠাবে
+      }
+    });
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push('/');
   };
 
   const categories = [
@@ -45,31 +78,30 @@ export default function Header() {
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
-            {/* ওয়াচলিস্ট বাটন - এটি যোগ করা হলো */}
             <Link href="/watchlist" className="hidden md:flex items-center gap-1 hover:text-purple-300 transition text-sm font-medium">
               <span>❤️</span>
               <span className="text-xs">Watchlist</span>
             </Link>
 
-            {status === "authenticated" ? (
+            {user ? (
               <div className="flex items-center gap-2">
                 <Link href="/dashboard" className="bg-yellow-400 text-black px-3 py-1.5 rounded-full text-[10px] font-black uppercase">
                   MY ADS 🛠️
                 </Link>
                 <div className="flex items-center gap-2 border-l border-white/20 pl-2">
-                  <img src={session.user?.image || "https://via.placeholder.com/100"} className="w-8 h-8 rounded-full border-2 border-purple-300" alt="user" />
-                  <button onClick={() => signOut({ callbackUrl: '/' })} className="text-[10px] font-black text-purple-200 hover:text-white uppercase">
+                  <img src={user.user_metadata?.avatar_url || "https://via.placeholder.com/100"} className="w-8 h-8 rounded-full border-2 border-purple-300" alt="user" />
+                  <button onClick={handleLogout} className="text-[10px] font-black text-purple-200 hover:text-white uppercase">
                     LOGOUT
                   </button>
                 </div>
               </div>
             ) : (
               <button 
-  onClick={() => signIn('google', { callbackUrl: 'https://bongobiz.com' })} 
-  className="bg-[#7B00FF] hover:bg-white hover:text-[#7B00FF] text-white px-5 py-1.5 rounded-full font-black text-xs shadow-md transition-all border border-white/20 uppercase"
->
-  LOGIN
-</button>
+                onClick={handleLogin} 
+                className="bg-[#7B00FF] hover:bg-white hover:text-[#7B00FF] text-white px-5 py-1.5 rounded-full font-black text-xs shadow-md transition-all border border-white/20 uppercase"
+              >
+                LOGIN
+              </button>
             )}
           </div>
         </div>
