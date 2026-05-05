@@ -1,27 +1,34 @@
-import { createClient } from '@supabase/supabase-js'
-import { NextResponse } from 'next/server'
+import { NextResponse } from 'next/server';
+import { getToken } from 'next-auth/jwt';
 
 export async function middleware(req) {
-  const res = NextResponse.next()
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  )
-
-  const { data: { user } } = await supabase.auth.getUser(req.cookies.get('sb-access-token')?.value)
-  const adminEmail = "dsusant566@gmail.com";
+  // আপনার পুরনো পেজগুলোর মতো এখানেও getToken ব্যবহার করা হয়েছে
+  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
   const { pathname } = req.nextUrl;
+
+  const adminEmail = "dsusant566@gmail.com";
+
+  // যে পাথগুলো আমরা লক করতে চাই
   const adminPaths = ['/admin', '/admin-control', '/admin-leads', '/admin-enquiries'];
-  
+
+  // যদি কেউ এই ৪টি পাথের কোনোটিতে ঢোকার চেষ্টা করে
   if (adminPaths.some(path => pathname.startsWith(path))) {
-    if (!user || user.email !== adminEmail) {
-      return NextResponse.redirect(new URL('/', req.url))
+    // যদি সে লগইন না থাকে অথবা তার ইমেইল আপনার মেইল না হয়
+    if (!token || token.email !== adminEmail) {
+      // তাকে সরাসরি হোম পেজে পাঠিয়ে দাও
+      return NextResponse.redirect(new URL('/', req.url));
     }
   }
 
-  return res
+  return NextResponse.next();
 }
 
+// এই কনফিগ নিশ্চিত করবে যে শুধু নির্দিষ্ট পাথেই মিডলওয়্যার কাজ করবে
 export const config = {
-  matcher: ['/admin/:path*', '/admin-control/:path*', '/admin-leads/:path*', '/admin-enquiries/:path*'],
-}
+  matcher: [
+    '/admin/:path*', 
+    '/admin-control/:path*', 
+    '/admin-leads/:path*', 
+    '/admin-enquiries/:path*'
+  ],
+};
