@@ -7,13 +7,17 @@ export async function middleware(req) {
 
   const adminEmail = "dsusant566@gmail.com";
 
-  // কাস্টমার ড্যাশবোর্ড ও পোস্ট-অ্যাড পেজ আমরা পেজের ভেতর (Client-side) হ্যান্ডেল করব
-  // তাই এখান থেকে রিডাইরেক্ট লজিক সরিয়ে দেওয়া হলো যাতে সেশন কনফ্লিক্ট না হয়।
+  // ১. পোস্ট-অ্যাড পেজ সুরক্ষা (আগের মতোই)
+  if (pathname.startsWith('/post-ad') && !token) {
+    const loginUrl = new URL('/', req.url);
+    return NextResponse.redirect(loginUrl);
+  }
 
-  // শুধুমাত্র অ্যাডমিন পাথ সুরক্ষা (এটি আগের মতোই আপনার জন্য সুরক্ষিত থাকবে)
+  // ২. অ্যাডমিন পাথ সুরক্ষা (আপনার অরিজিনাল কড়া সিকিউরিটি)
   const adminPaths = ['/admin', '/admin-control', '/admin-leads', '/admin-enquiries'];
   if (adminPaths.some(path => pathname.startsWith(path))) {
     if (!token || token.email !== adminEmail) {
+      // আপনার জিমেইল না হলে সোজা হোম পেজে রিডাইরেক্ট
       return NextResponse.redirect(new URL('/', req.url));
     }
   }
@@ -22,6 +26,7 @@ export async function middleware(req) {
 }
 
 export const config = {
-  // matcher থেকে ড্যাশবোর্ড সরিয়ে দিন যাতে সুপাবেজ সেশন কাজ করতে পারে
-  matcher: ['/admin/:path*', '/admin-control/:path*', '/admin-leads/:path*', '/admin-enquiries/:path*'],
+  // ড্যাশবোর্ড এখান থেকে সরানো হয়েছে যাতে সুপাবেজ সেশনে বাধা না পড়ে
+  // কিন্তু অ্যাডমিন এবং পোস্ট-অ্যাড আগের মতোই মিডলওয়্যার দিয়ে সুরক্ষিত
+  matcher: ['/post-ad', '/admin/:path*', '/admin-control/:path*', '/admin-leads/:path*', '/admin-enquiries/:path*'],
 };
