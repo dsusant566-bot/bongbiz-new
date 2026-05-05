@@ -1,39 +1,37 @@
 "use client";
-import { useSession } from "next-auth/react";
+import { supabase } from "@/lib/supabaseClient"; // আপনার সুপাবেজ ক্লায়েন্ট
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export default function AdminLayout({ children }) {
-  const { data: session, status } = useSession();
+  const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();
-  
-  // মেইল আইডিটা ছোট হাতের অক্ষরে লিখুন
-  const adminEmail = "dsusant566@gmail.com".toLowerCase();
+  const adminEmail = "dsusant566@gmail.com"; // আপনার মেইল
 
   useEffect(() => {
-    if (status === "unauthenticated") {
-      router.replace("/");
-    } else if (status === "authenticated") {
-      const userEmail = session?.user?.email?.toLowerCase();
-      if (userEmail !== adminEmail) {
-        console.log("ভুল ইমেইল আইডি:", userEmail);
-        router.replace("/");
+    const checkAdmin = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session && session.user.email === adminEmail) {
+        setIsAdmin(true);
+      } else {
+        router.replace("/"); // অ্যাডমিন না হলে হোমপেজে পাঠাও
       }
-    }
-  }, [session, status, router]);
+      setLoading(false);
+    };
 
-  if (status === "loading") {
+    checkAdmin();
+  }, [router]);
+
+  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="animate-pulse font-bold text-blue-600">নিরাপত্তা চেক করা হচ্ছে...</p>
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <p className="font-bold italic animate-pulse text-purple-700">Checking Admin Credentials...</p>
       </div>
     );
   }
 
-  // যদি সেশন থাকে এবং ইমেইল মিলে যায়
-  if (status === "authenticated" && session?.user?.email?.toLowerCase() === adminEmail) {
-    return <>{children}</>;
-  }
-
-  return null;
+  // যদি অ্যাডমিন হয় তবেই ভেতরটা দেখাও
+  return isAdmin ? <>{children}</> : null;
 }
