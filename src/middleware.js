@@ -7,14 +7,10 @@ export async function middleware(req) {
 
   const adminEmail = "dsusant566@gmail.com";
 
-  // যদি ইউজার লগইন না থাকে এবং সে সরাসরি পোস্ট-অ্যাড পেজে যেতে চায়
-  if (pathname.startsWith('/post-ad') && !token) {
-    // লগইন করার পর সরাসরি তাকে পোস্ট-অ্যাড পেজেই পাঠাতে বাধ্য করা হবে
-    const loginUrl = new URL('/', req.url);
-    return NextResponse.redirect(loginUrl);
-  }
+  // কাস্টমার ড্যাশবোর্ড ও পোস্ট-অ্যাড পেজ আমরা পেজের ভেতর (Client-side) হ্যান্ডেল করব
+  // তাই এখান থেকে রিডাইরেক্ট লজিক সরিয়ে দেওয়া হলো যাতে সেশন কনফ্লিক্ট না হয়।
 
-  // অ্যাডমিন পাথ সুরক্ষা
+  // শুধুমাত্র অ্যাডমিন পাথ সুরক্ষা (এটি আগের মতোই আপনার জন্য সুরক্ষিত থাকবে)
   const adminPaths = ['/admin', '/admin-control', '/admin-leads', '/admin-enquiries'];
   if (adminPaths.some(path => pathname.startsWith(path))) {
     if (!token || token.email !== adminEmail) {
@@ -26,5 +22,6 @@ export async function middleware(req) {
 }
 
 export const config = {
-  matcher: ['/post-ad', '/dashboard/:path*', '/admin/:path*'],
+  // matcher থেকে ড্যাশবোর্ড সরিয়ে দিন যাতে সুপাবেজ সেশন কাজ করতে পারে
+  matcher: ['/admin/:path*', '/admin-control/:path*', '/admin-leads/:path*', '/admin-enquiries/:path*'],
 };
