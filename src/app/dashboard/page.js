@@ -16,17 +16,12 @@ export default function Dashboard() {
 
   useEffect(() => {
     async function checkAccess() {
-      // সুপাবেজ থেকে সরাসরি সেশন চেক
       const { data: { session } } = await supabase.auth.getSession();
-      
       if (!session) {
-        // লগইন না থাকলে হোম পেজে পাঠিয়ে দাও
         router.replace('/');
         return;
       }
-
       setAuthLoading(false);
-      // সেশন থাকলে ওই ইমেইলের অ্যাডগুলো নিয়ে আসো
       fetchUserAds(session.user.email);
     }
     checkAccess();
@@ -38,13 +33,26 @@ export default function Dashboard() {
       .from('listings')
       .select('*')
       .eq('is_deleted', false)
-      .eq('user_email', email) // ইমেইল ম্যাপিং: শুধু নিজের অ্যাড দেখা যাবে
+      .eq('user_email', email)
       .order('created_at', { ascending: false });
 
     if (!error) {
       setAds(data);
     }
     setLoading(false);
+  }
+
+  // নতুন সোল্ড ফাংশন
+  async function toggleSold(id, currentStatus) {
+    const { error } = await supabase
+      .from('listings')
+      .update({ is_sold: !currentStatus }) 
+      .eq('id', id);
+
+    if (!error) {
+      const { data: { session } } = await supabase.auth.getSession();
+      fetchUserAds(session.user.email);
+    }
   }
 
   async function viewLeads(adId) {
@@ -104,17 +112,28 @@ export default function Dashboard() {
                   <tr><td colSpan="4" className="p-10 text-center font-bold text-gray-400 animate-pulse">SYNCING DATA...</td></tr>
                 ) : ads.length > 0 ? (
                   ads.map((ad) => (
-                    <tr key={ad.id} className="border-b border-gray-50 hover:bg-blue-50">
-                      <td className="p-4"><img src={ad.image_url_1} className="w-12 h-12 object-cover rounded-lg shadow-sm" alt="" /></td>
+                    <tr key={ad.id} className={`border-b border-gray-50 hover:bg-blue-50 ${ad.is_sold ? 'opacity-60' : ''}`}>
+                      <td className="p-4 relative">
+                        <img src={ad.image_url_1} className="w-12 h-12 object-cover rounded-lg shadow-sm" alt="" />
+                        {ad.is_sold && <span className="absolute top-2 left-2 bg-red-600 text-white text-[8px] font-black px-1 rounded">SOLD</span>}
+                      </td>
                       <td className="p-4">
-                        <p className="font-bold text-slate-800 text-sm">{ad.title}</p>
+                        <p className={`font-bold text-sm ${ad.is_sold ? 'text-gray-400 line-through' : 'text-slate-800'}`}>{ad.title}</p>
                         <p className="text-[9px] text-gray-400 font-black uppercase">{ad.category}</p>
                       </td>
                       <td className="p-4 font-black text-blue-600">₹{ad.price}</td>
                       <td className="p-4">
                         <div className="flex justify-center gap-2">
+                          {/* Sold Toggle Button */}
+                          <button 
+                            onClick={() => toggleSold(ad.id, ad.is_sold)} 
+                            className={`px-3 py-2 rounded-lg text-[9px] font-black uppercase transition-all shadow-sm ${ad.is_sold ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-600 hover:bg-green-100'}`}
+                          >
+                            {ad.is_sold ? 'Unsold' : 'Sold'}
+                          </button>
+                          
                           <button onClick={() => viewLeads(ad.id)} className="bg-blue-100 text-blue-600 px-3 py-2 rounded-lg hover:bg-blue-600 hover:text-white transition-all text-lg shadow-sm">👁️</button>
-                          <Link href={`/dashboard/edit/${ad.id}`} className="bg-amber-100 text-amber-600 px-4 py-2 rounded-lg text-[10px] font-black uppercase">Edit</Link>
+                          <Link href={`/dashboard/edit/${ad.id}`} className="bg-amber-100 text-amber-600 px-4 py-2 rounded-lg text-[10px] font-black uppercase flex items-center">Edit</Link>
                           <button onClick={() => deleteAd(ad.id)} className="bg-red-100 text-red-600 px-4 py-2 rounded-lg text-[10px] font-black uppercase">Delete</button>
                         </div>
                       </td>
@@ -129,7 +148,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Leads Modal */}
+      {/* Leads Modal (একই রাখা হয়েছে) */}
       {showLeadModal && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={() => setShowLeadModal(false)}>
           <div className="bg-white rounded-[2.5rem] p-8 max-w-md w-full max-h-[80vh] overflow-y-auto shadow-2xl relative" onClick={(e) => e.stopPropagation()}>
