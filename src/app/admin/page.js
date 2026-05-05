@@ -1,23 +1,33 @@
 "use client";
-import React, { useEffect } from 'react'; // useEffect যোগ করা হয়েছে
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useSession } from "next-auth/react"; // সেশন চেক করার জন্য
-import { useRouter } from "next/navigation"; // রিডাইরেক্ট করার জন্য
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { useRouter } from "next/navigation";
 
 export default function AdminMaster() {
-  const { data: session, status } = useSession();
+  const supabase = createClientComponentClient();
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  // সিকিউরিটি চেক: dsusant566@gmail.com ছাড়া অন্য কেউ ঢুকলে তাকে বের করে দেবে
   useEffect(() => {
-    if (status === "unauthenticated" || (session && session.user.email !== "dsusant566@gmail.com")) {
-      router.push("/");
-    }
-  }, [status, session, router]);
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      const currentUser = session?.user || null;
+      
+      // সিকিউরিটি চেক: dsusant566@gmail.com ছাড়া অন্য কেউ ঢুকলে বের করে দেবে
+      if (!currentUser || currentUser.email !== "dsusant566@gmail.com") {
+        router.push("/");
+      } else {
+        setUser(currentUser);
+      }
+      setLoading(false);
+    };
+    checkUser();
+  }, [supabase, router]);
 
-  // লোডিং অবস্থায় বা ভুল ইউজারের ক্ষেত্রে পেজ দেখাবে না
-  if (status === "loading") return <div className="p-10 text-center font-bold">Checking Access...</div>;
-  if (!session || session.user.email !== "dsusant566@gmail.com") return null;
+  if (loading) return <div className="p-10 text-center font-bold text-slate-900">Checking Access...</div>;
+  if (!user || user.email !== "dsusant566@gmail.com") return null;
 
   const adminTools = [
     { title: "Manage Ads", desc: "Featured/Sold Out কন্ট্রোল করুন", link: "/admin-control", color: "bg-sky-500" },
@@ -36,16 +46,14 @@ export default function AdminMaster() {
     <div className="min-h-screen bg-[#f8fafc] p-4 md:p-10 font-sans text-slate-900">
       <div className="max-w-6xl mx-auto">
         
-        {/* Header Section */}
         <header className="mb-12 text-center border-b pb-8">
           <h1 className="text-4xl md:text-5xl font-black italic tracking-tighter uppercase">
             BONGO<span className="text-blue-600">BIZ</span> <span className="text-slate-700">ADMIN CENTRAL</span>
           </h1>
           <p className="text-slate-500 font-bold uppercase text-[10px] mt-3 tracking-[0.3em]">Master Control Panel V1.0</p>
-          <p className="text-blue-600 text-[10px] font-bold mt-1">LOGGED IN AS: {session.user.email}</p>
+          <p className="text-blue-600 text-[10px] font-bold mt-1 uppercase">Logged In As: {user.email}</p>
         </header>
 
-        {/* Admin Tools */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
           {adminTools.map((tool, index) => (
             <Link key={index} href={tool.link} className="group flex">
@@ -64,7 +72,6 @@ export default function AdminMaster() {
           ))}
         </div>
 
-        {/* Quick View Categories */}
         <div className="bg-white p-10 rounded-[3rem] shadow-xl border border-slate-100">
           <div className="flex items-center gap-4 mb-8">
             <div className="h-8 w-2 bg-blue-600 rounded-full"></div>
