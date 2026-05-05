@@ -9,7 +9,6 @@ export async function middleware(req) {
   )
 
   const { data: { user } } = await supabase.auth.getUser(req.cookies.get('sb-access-token')?.value)
-
   const adminEmail = "dsusant566@gmail.com";
   const { pathname } = req.nextUrl;
   const adminPaths = ['/admin', '/admin-control', '/admin-leads', '/admin-enquiries'];

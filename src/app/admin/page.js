@@ -1,21 +1,24 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from '@supabase/supabase-js';
 import { useRouter } from "next/navigation";
 
 export default function AdminMaster() {
-  const supabase = createClientComponentClient();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
+  // সরাসরি ক্লায়েন্ট তৈরি
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  );
+
   useEffect(() => {
     const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      const currentUser = session?.user || null;
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
       
-      // সিকিউরিটি চেক: dsusant566@gmail.com ছাড়া অন্য কেউ ঢুকলে বের করে দেবে
       if (!currentUser || currentUser.email !== "dsusant566@gmail.com") {
         router.push("/");
       } else {
@@ -24,7 +27,7 @@ export default function AdminMaster() {
       setLoading(false);
     };
     checkUser();
-  }, [supabase, router]);
+  }, [router, supabase.auth]);
 
   if (loading) return <div className="p-10 text-center font-bold text-slate-900">Checking Access...</div>;
   if (!user || user.email !== "dsusant566@gmail.com") return null;
@@ -45,7 +48,6 @@ export default function AdminMaster() {
   return (
     <div className="min-h-screen bg-[#f8fafc] p-4 md:p-10 font-sans text-slate-900">
       <div className="max-w-6xl mx-auto">
-        
         <header className="mb-12 text-center border-b pb-8">
           <h1 className="text-4xl md:text-5xl font-black italic tracking-tighter uppercase">
             BONGO<span className="text-blue-600">BIZ</span> <span className="text-slate-700">ADMIN CENTRAL</span>
@@ -75,15 +77,11 @@ export default function AdminMaster() {
         <div className="bg-white p-10 rounded-[3rem] shadow-xl border border-slate-100">
           <div className="flex items-center gap-4 mb-8">
             <div className="h-8 w-2 bg-blue-600 rounded-full"></div>
-            <h3 className="text-xl font-black text-slate-800 uppercase italic tracking-tight">
-              Quick View Categories
-            </h3>
+            <h3 className="text-xl font-black text-slate-800 uppercase italic tracking-tight">Quick View Categories</h3>
           </div>
-          
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {categories.map((cat, index) => (
-              <Link key={index} href={cat.link} 
-                className="flex items-center justify-center p-5 rounded-2xl bg-slate-50 hover:bg-slate-900 hover:text-white transition-all duration-300 font-black uppercase text-[11px] tracking-widest border border-slate-100 shadow-sm">
+              <Link key={index} href={cat.link} className="flex items-center justify-center p-5 rounded-2xl bg-slate-50 hover:bg-slate-900 hover:text-white transition-all duration-300 font-black uppercase text-[11px] tracking-widest border border-slate-100 shadow-sm">
                 {cat.name}
               </Link>
             ))}
@@ -91,9 +89,7 @@ export default function AdminMaster() {
         </div>
 
         <footer className="mt-16 text-center">
-          <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.5em]">
-            © 2026 BONGOBIZ | Efficiency in Management
-          </p>
+          <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.5em]">© 2026 BONGOBIZ | Efficiency in Management</p>
         </footer>
       </div>
     </div>
