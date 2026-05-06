@@ -1,36 +1,37 @@
 "use client";
-import { supabase } from "@/lib/supabaseClient"; // Supabase ইমপোর্ট
+import { supabase } from "@/lib/supabaseClient"; 
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation"; 
 
 export default function Header() {
-  const [user, setUser] = useState(null); // ইউজার স্টেট
+  const [user, setUser] = useState(null); 
   const [search, setSearch] = useState("");
   const router = useRouter();
 
-  // ১. সুপাবেজ সেশন চেক করা (Next-Auth এর বদলে)
   useEffect(() => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setUser(session?.user || null);
     };
-
     checkUser();
-
-    // সেশন চেঞ্জ হলে আপডেট করার জন্য লিসেনার
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user || null);
     });
-
     return () => {
       authListener.subscription.unsubscribe();
     };
   }, []);
 
-  const handleSearch = (e) => {
-    if (e.key === 'Enter' && search.trim() !== "") {
+  const executeSearch = () => {
+    if (search.trim() !== "") {
       router.push(`/search?q=${encodeURIComponent(search.trim())}`);
+    }
+  };
+
+  const handleSearch = (e) => {
+    if (e.key === 'Enter') {
+      executeSearch();
     }
   };
 
@@ -38,7 +39,7 @@ export default function Header() {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/dashboard`, // লগইন হলে ড্যাশবোর্ডে পাঠাবে
+        redirectTo: `${window.location.origin}/dashboard`, 
       }
     });
   };
@@ -66,15 +67,25 @@ export default function Header() {
             <span className="text-xl font-bold hidden sm:block uppercase">BONGO<span className="text-purple-300">BIZ</span></span>
           </Link>
 
+          {/* সার্চ বক্স এরিয়া - এখানে পরিবর্তন করা হয়েছে */}
           <div className="flex-grow max-w-md relative">
             <input
               type="text"
               placeholder="Search items..."
-              className="w-full py-2 px-5 rounded-full bg-white/10 border border-white/20 text-white text-sm focus:outline-none focus:bg-white focus:text-black transition-all placeholder:text-purple-200"
+              className="w-full py-2 pl-5 pr-12 rounded-full bg-white/10 border border-white/20 text-white text-sm focus:outline-none focus:bg-white focus:text-black transition-all placeholder:text-purple-200"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => setSearch(e.target.value)} 
               onKeyDown={handleSearch}
             />
+            {/* সার্চ বাটন - একদম ডানদিকে ফিক্সড */}
+            <button 
+              type="button"
+              onClick={executeSearch}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 bg-[#7B00FF] hover:bg-[#4B0082] text-white rounded-full transition-all active:scale-90 z-10"
+              style={{ right: '8px' }} // এটি বাটনকে ডানদিকেই রাখবে
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            </button>
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
