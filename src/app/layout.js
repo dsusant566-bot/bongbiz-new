@@ -4,7 +4,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer"; 
 import FloatingButtons from "@/components/FloatingButtons";
 import AuthProvider from "@/components/AuthProvider";
-import { GoogleAnalytics } from '@next/third-parties/google'; // এটি যোগ করা হয়েছে
+import { GoogleAnalytics } from '@next/third-parties/google';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -19,6 +19,11 @@ const geistMono = Geist_Mono({
 export const metadata = {
   title: "BongoBiz - Classified Marketplace",
   description: "The Best Classified Marketplace for Property Developers and Beyond",
+  manifest: "/manifest.json", // এখানে সঠিক বানান আছে
+  icons: {
+    icon: "/icon-192x192.png",
+    apple: "/icon-192x192.png",
+  },
   verification: {
     google: "RoxK-u3FkbPbZcER9b-KnOF60fQQxWXiLd-_5Hc2yck",
   },
@@ -36,7 +41,6 @@ export default function RootLayout({ children }) {
           <Footer />
           <FloatingButtons />
         </AuthProvider>
-        {/* গুগল অ্যানালিটিক্স কোড এখানে থাকবে */}
         <GoogleAnalytics gaId="G-DGJRYV2VF5" />
       </body>
     </html>
