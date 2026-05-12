@@ -58,8 +58,8 @@ export default function Header() {
   ];
 
   return (
-    <header className="sticky top-0 z-50 shadow-lg">
-      <div className="bg-[#4B0082] text-white">
+    <header className="sticky top-0 z-[9999] shadow-lg bg-[#4B0082]" style={{ zIndex: 9999, position: 'sticky', top: 0 }}>
+      <div className="text-white">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
           
           <Link href="/" className="flex items-center gap-2 group shrink-0">

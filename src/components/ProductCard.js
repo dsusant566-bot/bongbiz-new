@@ -79,8 +79,8 @@ export default function ProductCard({ item }) {
     <Link href={itemPath} className="text-[9px] font-black text-slate-400 uppercase hover:text-black leading-none">VIEW DETAILS</Link>
   </div>
 
-  {/* বাটন কন্টেনার - এখানে relative z-[50] আর pointer-events-auto দিলে মোবাইলে টাচ কাজ করবেই */}
-  <div className="flex items-center gap-2 shrink-0 relative z-[50] pointer-events-auto">
+  {/* বাটন কন্টেনার - এখানে relative z-[10] আর pointer-events-auto দিলে মোবাইলে টাচ কাজ করবেই */}
+  <div className="flex items-center gap-2 shrink-0 relative z-[10] pointer-events-auto">
      {!item.is_sold && (
        <>
          <ContactLeadForm ad={item} mode="call" />
